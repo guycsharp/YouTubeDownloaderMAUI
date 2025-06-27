@@ -5,6 +5,7 @@
              Title="YouTube Downloader"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
+    <!-- 🔗 Bind this page to the MainViewModel -->
     <ContentPage.BindingContext>
         <viewmodel:MainViewModel />
     </ContentPage.BindingContext>
@@ -12,13 +13,13 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
-            <!-- Header -->
+            <!-- 🪧 App Title -->
             <Label Text="YouTube Playlist Downloader"
                    FontSize="24"
                    HorizontalOptions="Center"
                    TextColor="{DynamicResource PrimaryColor}" />
 
-            <!-- Playlist URL Entry -->
+            <!-- 🔗 Playlist URL Entry + Paste Button -->
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <Entry Placeholder="Enter YouTube playlist URL"
                        Text="{Binding PlaylistUrl}"
@@ -32,14 +33,13 @@
                         AutomationProperties.Name="Paste URL" />
             </Grid>
 
-            <!-- Format Selection -->
+            <!-- 🎞 Format Picker -->
             <Picker Title="Select Format"
                     ItemsSource="{Binding Formats}"
                     SelectedItem="{Binding SelectedFormat}"
-                    HorizontalOptions="Fill"
                     AutomationProperties.Name="Format Picker" />
 
-            <!-- Destination Folder Picker -->
+            <!-- 📁 Destination Folder Selection -->
             <Label Text="Destination Folder"
                    FontAttributes="Bold"
                    FontSize="14"
@@ -57,7 +57,13 @@
                         VerticalOptions="Center" />
             </Grid>
 
-            <!-- Download Button -->
+            <!-- 🆕 Overwrite Existing Checkbox -->
+            <CheckBox IsChecked="{Binding OverwriteExisting}" />
+            <Label Text="Overwrite existing files"
+                   VerticalOptions="Center"
+                   FontSize="14" />
+
+            <!-- 🔽 Download Button -->
             <Button Text="Download Playlist"
                     Command="{Binding DownloadCommand}"
                     IsEnabled="{Binding IsNotBusy}"
@@ -67,7 +73,7 @@
                     Padding="15"
                     AutomationProperties.Name="Download Button" />
 
-            <!-- Progress Indicators -->
+            <!-- 🔄 Busy Spinner + Progress -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"
                                Color="{StaticResource Primary}" />
@@ -86,7 +92,7 @@
                    IsVisible="{Binding IsBusy}"
                    HorizontalOptions="Center" />
 
-            <!-- Tap-to-Copy Error Label -->
+            <!-- ⚠️ Tap-to-Copy Error Message -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
                    IsVisible="{Binding HasError}"
@@ -97,7 +103,7 @@
                 </Label.GestureRecognizers>
             </Label>
 
-            <!-- Log Output Viewer -->
+            <!-- 📝 Log Output -->
             <Border Stroke="#e0e0e0"
                     StrokeThickness="1"
                     StrokeShape="RoundRectangle 10"
