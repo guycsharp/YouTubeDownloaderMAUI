@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<!-- ✅ Declare all target platforms explicitly -->
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
+
 		<OutputType>Exe</OutputType>
 		<RootNamespace>YouTubeDownloaderMAUI</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -9,23 +11,29 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
+		<!-- 🏷️ Metadata -->
 		<ApplicationTitle>YouTubeDownloaderMAUI</ApplicationTitle>
 		<ApplicationId>com.companyname.youtubedownloadermaui</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- 🪟 Windows deployment config -->
 		<WindowsPackageType>None</WindowsPackageType>
 
-		<!-- Minimum supported OS versions -->
+		<!-- 📱 Minimum platform support -->
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)'=='net9.0-ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)'=='net9.0-maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)'=='net9.0-android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)'=='net9.0-windows10.0.19041.0'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="'$(TargetFramework)'=='net9.0-windows10.0.19041.0'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)'=='net9.0-tizen'">6.5</SupportedOSPlatformVersion>
+
+		<!-- ✅ Suppress package downgrade warnings (NU1605) -->
+		<NoWarn>$(NoWarn);NU1605</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Assets -->
+		<!-- 🎨 Assets and resources -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 		<MauiImage Include="Resources\Images\*" />
@@ -35,11 +43,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- 🧰 Required packages -->
 		<PackageReference Include="CliWrap" Version="3.9.0" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="12.0.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 
-		<!-- ✅ Updated to match the required version from CommunityToolkit.Maui -->
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.70" />
+		<!-- ✅ Corrected Microsoft.Maui.Controls version to avoid downgrade -->
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.70">
+			<AllowExplicitVersion>true</AllowExplicitVersion>
+		</PackageReference>
 
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
 	</ItemGroup>
