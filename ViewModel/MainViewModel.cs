@@ -1,12 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.EventStream;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using YouTubeDownloaderMAUI.Services;
+using Microsoft.Maui.Controls;
 
-
-
-namespace YouTubeDownloaderMAUI.ViewModels;
+namespace YouTubeDownloaderMAUI.ViewModel;
 
 public partial class MainViewModel : ObservableObject
 {
@@ -31,17 +34,27 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedFormat = "MP4 (Video)";
 
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasError;
+
     [RelayCommand]
     private async Task Download()
     {
         if (string.IsNullOrWhiteSpace(PlaylistUrl))
         {
-            AddLog("Please enter a playlist URL");
+            HasError = true;
+            ErrorMessage = "Please enter a playlist URL.";
+            AddLog("Missing playlist URL.");
             return;
         }
 
         try
         {
+            HasError = false;
+            ErrorMessage = string.Empty;
             IsBusy = true;
             StatusMessage = "Preparing...";
             await ExecutableService.EnsureExecutablesExist();
@@ -49,19 +62,19 @@ public partial class MainViewModel : ObservableObject
             var binPath = Path.Combine(AppContext.BaseDirectory, "bin", "ffmpeg", "bin");
             var ytDlpPath = Path.Combine(AppContext.BaseDirectory, "bin", "yt-dlp.exe");
 
-            var arguments = SelectedFormat == "MP4 (Video)" ?
-                $"-f \"bestvideo+bestaudio\" --merge-output-format mp4 --embed-thumbnail --embed-metadata -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\"" :
-                $"-x --audio-format mp3 --embed-thumbnail -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\"";
+            var arguments = SelectedFormat == "MP4 (Video)"
+                ? "-f \"bestvideo+bestaudio\" --merge-output-format mp4 --embed-thumbnail --embed-metadata -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\""
+                : "-x --audio-format mp3 --embed-thumbnail -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\"";
 
             arguments += $" \"{PlaylistUrl}\"";
 
             AddLog($"Running command: yt-dlp {arguments}");
 
             var cmd = Cli.Wrap(ytDlpPath)
-                .WithArguments(arguments)
-                .WithWorkingDirectory(AppContext.BaseDirectory)
-                .WithEnvironmentVariables(env => env
-                    .Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{binPath}"));
+                        .WithArguments(arguments)
+                        .WithWorkingDirectory(AppContext.BaseDirectory)
+                        .WithEnvironmentVariables(env =>
+                            env.Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{binPath}"));
 
             AddLog("Starting download...");
 
@@ -89,6 +102,8 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            ErrorMessage = $"Download failed: {ex.Message}";
+            HasError = true;
             AddLog($"Error: {ex.Message}");
             StatusMessage = "Download failed!";
         }
