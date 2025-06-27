@@ -9,9 +9,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using YouTubeDownloaderMAUI.Services;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
 
 namespace YouTubeDownloaderMAUI.ViewModel;
 
+// This ViewModel handles all app logic and user interaction bindings
 public partial class MainViewModel : ObservableObject
 {
     [ObservableProperty]
@@ -22,6 +24,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private double _progress;
+
+    [ObservableProperty]
+    private string _progressText = string.Empty;
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -41,6 +46,35 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasError;
 
+    // This is where the user wants to save the downloaded files
+    [ObservableProperty]
+    private string _destinationFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+    // 🗂 Simulated folder picker using FilePicker (most compatible fallback)
+    [RelayCommand]
+    private async Task Browse()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = "Pick any file inside your target folder"
+            });
+
+            if (result != null)
+            {
+                DestinationFolder = Path.GetDirectoryName(result.FullPath);
+                AddLog($"Selected destination: {DestinationFolder}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to pick folder: {ex.Message}";
+            HasError = true;
+        }
+    }
+
+    // 🧭 User taps Download — validate, construct command, stream progress
     [RelayCommand]
     private async Task Download()
     {
@@ -52,6 +86,14 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(DestinationFolder) || !Directory.Exists(DestinationFolder))
+        {
+            HasError = true;
+            ErrorMessage = "Invalid destination folder.";
+            AddLog("Invalid destination folder.");
+            return;
+        }
+
         try
         {
             HasError = false;
@@ -59,6 +101,7 @@ public partial class MainViewModel : ObservableObject
             IsBusy = true;
             StatusMessage = "Preparing...";
             Progress = 0;
+            ProgressText = string.Empty;
 
             await ExecutableService.EnsureExecutablesExist();
 
@@ -66,19 +109,21 @@ public partial class MainViewModel : ObservableObject
             var ytDlpPath = Path.Combine(toolsPath, "yt-dlp.exe");
             var ffmpegBinPath = Path.Combine(toolsPath, "ffmpeg", "bin");
 
+            var outputPath = Path.Combine(DestinationFolder, "%(playlist_title)s", "%(playlist_index)s - %(title)s.%(ext)s");
+
             var arguments = SelectedFormat == "MP4 (Video)"
-                ? "-f \"bestvideo+bestaudio\" --merge-output-format mp4 --embed-thumbnail --embed-metadata -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\""
-                : "-x --audio-format mp3 --embed-thumbnail -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\"";
+                ? $"-f \"bestvideo+bestaudio\" --merge-output-format mp4 --embed-thumbnail --embed-metadata -o \"{outputPath}\""
+                : $"-x --audio-format mp3 --embed-thumbnail -o \"{outputPath}\"";
 
             arguments += $" \"{PlaylistUrl}\"";
 
             AddLog($"Running command: yt-dlp {arguments}");
 
             var cmd = Cli.Wrap(ytDlpPath)
-                        .WithArguments(arguments)
-                        .WithWorkingDirectory(AppContext.BaseDirectory)
-                        .WithEnvironmentVariables(env =>
-                            env.Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{ffmpegBinPath}"));
+                         .WithArguments(arguments)
+                         .WithWorkingDirectory(AppContext.BaseDirectory)
+                         .WithEnvironmentVariables(env =>
+                             env.Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{ffmpegBinPath}"));
 
             AddLog("Starting download...");
 
@@ -106,6 +151,7 @@ public partial class MainViewModel : ObservableObject
             }
 
             Progress = 1.0;
+            ProgressText = "100%";
             AddLog("Download completed!");
             StatusMessage = "Completed successfully!";
         }
@@ -116,6 +162,7 @@ public partial class MainViewModel : ObservableObject
             AddLog($"Error: {ex.Message}");
             StatusMessage = "Download failed!";
             Progress = 0;
+            ProgressText = string.Empty;
         }
         finally
         {
@@ -123,15 +170,19 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // 🔁 Extract percent progress from yt-dlp output and update UI
     private void UpdateProgressBarFromOutput(string line)
     {
         var match = Regex.Match(line, @"(?<percent>\d{1,3}(?:\.\d+)?)%");
         if (match.Success && double.TryParse(match.Groups["percent"].Value, out double percent))
         {
-            Progress = Math.Clamp(percent / 100.0, 0.0, 1.0);
+            double clamped = Math.Clamp(percent / 100.0, 0.0, 1.0);
+            Progress = clamped;
+            ProgressText = $"{percent:F1}%";
         }
     }
 
+    // 📋 Clipboard paste helper
     [RelayCommand]
     private async Task Paste()
     {
@@ -139,6 +190,7 @@ public partial class MainViewModel : ObservableObject
         AddLog("Pasted URL from clipboard");
     }
 
+    // 📎 Allow tapping red error message to copy it
     [RelayCommand]
     private async Task CopyError()
     {
@@ -149,6 +201,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // 🧾 Add text to visible log list with a timestamp
     private void AddLog(string message)
     {
         MainThread.BeginInvokeOnMainThread(() =>
