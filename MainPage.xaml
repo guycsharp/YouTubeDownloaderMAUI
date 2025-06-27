@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="YouTubeDownloaderMAUI.MainPage"
+             xmlns:viewmodel="clr-namespace:YouTubeDownloaderMAUI.ViewModels"
+             Title="YouTube Downloader"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ContentPage.BindingContext>
+        <viewmodel:MainViewModel />
+    </ContentPage.BindingContext>
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <!-- Header -->
+            <Label Text="YouTube Playlist Downloader" 
+                   FontSize="24"
+                   HorizontalOptions="Center"
+                   TextColor="{DynamicResource PrimaryColor}" />
+            
+            <!-- URL Input -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Entry Placeholder="Enter YouTube playlist URL" 
+                       Text="{Binding PlaylistUrl}"
+                       Grid.Column="0"
+                       ClearButtonVisibility="WhileEditing" />
+                <Button Text="Paste" 
+                        Command="{Binding PasteCommand}"
+                        Grid.Column="1"
+                        Padding="20,0" />
+            </Grid>
+            
+            <!-- Format Selection -->
+            <Picker Title="Select Format"
+                    ItemsSource="{Binding Formats}"
+                    SelectedItem="{Binding SelectedFormat}"
+                    HorizontalOptions="Fill" />
+            
+            <!-- Download Button -->
+            <Button Text="Download Playlist" 
+                    Command="{Binding DownloadCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    BackgroundColor="{StaticResource Primary}" 
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="15" />
+            
+            <!-- Progress Indicators -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                               IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}" />
+            <ProgressBar Progress="{Binding Progress}" 
+                         IsVisible="{Binding IsBusy}"
+                         ProgressColor="{StaticResource Primary}" />
+            <Label Text="{Binding StatusMessage}"
+                   IsVisible="{Binding IsBusy}"
+                   HorizontalOptions="Center" />
+            
+            <!-- Log Output -->
+            <Frame CornerRadius="10" Padding="10" BackgroundColor="#f5f5f5">
+                <CollectionView ItemsSource="{Binding LogEntries}"
+                            HeightRequest="200">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Label Text="{Binding .}" 
+                                   FontFamily="Courier"
+                                   FontSize="14"/>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
