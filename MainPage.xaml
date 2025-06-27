@@ -47,7 +47,7 @@
 
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <Entry Text="{Binding DestinationFolder}"
-                       IsReadOnly="True"
+                       IsReadOnly="False"
                        Grid.Column="0"
                        AutomationProperties.Name="Destination Folder" />
                 <Button Text="Browse"
