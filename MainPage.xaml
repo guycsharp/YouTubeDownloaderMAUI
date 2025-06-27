@@ -1,47 +1,64 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="YouTubeDownloaderMAUI.MainPage"
              xmlns:viewmodel="clr-namespace:YouTubeDownloaderMAUI.ViewModel"
              Title="YouTube Downloader"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
-	<ContentPage.BindingContext>
-		<viewmodel:MainViewModel />
-	</ContentPage.BindingContext>
+    <ContentPage.BindingContext>
+        <viewmodel:MainViewModel />
+    </ContentPage.BindingContext>
 
-	<ScrollView>
-		<VerticalStackLayout Padding="20" Spacing="15">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
 
-			<!-- Header -->
-			<Label Text="YouTube Playlist Downloader"
+            <!-- Header -->
+            <Label Text="YouTube Playlist Downloader"
                    FontSize="24"
                    HorizontalOptions="Center"
                    TextColor="{DynamicResource PrimaryColor}" />
 
-			<!-- URL Input -->
-			<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-				<Entry Placeholder="Enter YouTube playlist URL"
+            <!-- Playlist URL Entry -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Entry Placeholder="Enter YouTube playlist URL"
                        Text="{Binding PlaylistUrl}"
                        Grid.Column="0"
                        ClearButtonVisibility="WhileEditing" />
-				<Button Text="Paste"
+                <Button Text="Paste"
                         Command="{Binding PasteCommand}"
                         Grid.Column="1"
                         Padding="10"
                         VerticalOptions="Center"
                         AutomationProperties.Name="Paste URL" />
-			</Grid>
+            </Grid>
 
-			<!-- Format Selection -->
-			<Picker Title="Select Format"
+            <!-- Format Selection -->
+            <Picker Title="Select Format"
                     ItemsSource="{Binding Formats}"
                     SelectedItem="{Binding SelectedFormat}"
                     HorizontalOptions="Fill"
                     AutomationProperties.Name="Format Picker" />
 
-			<!-- Download Button -->
-			<Button Text="Download Playlist"
+            <!-- Destination Folder Picker -->
+            <Label Text="Destination Folder"
+                   FontAttributes="Bold"
+                   FontSize="14"
+                   TextColor="{DynamicResource PrimaryColor}" />
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Entry Text="{Binding DestinationFolder}"
+                       IsReadOnly="False"
+                       Grid.Column="0"
+                       AutomationProperties.Name="Destination Folder" />
+                <Button Text="Browse"
+                        Command="{Binding BrowseCommand}"
+                        Grid.Column="1"
+                        Padding="10"
+                        VerticalOptions="Center" />
+            </Grid>
+
+            <!-- Download Button -->
+            <Button Text="Download Playlist"
                     Command="{Binding DownloadCommand}"
                     IsEnabled="{Binding IsNotBusy}"
                     BackgroundColor="{StaticResource Primary}"
@@ -50,37 +67,54 @@
                     Padding="15"
                     AutomationProperties.Name="Download Button" />
 
-			<!-- Progress Indicators -->
-			<ActivityIndicator IsRunning="{Binding IsBusy}"
+            <!-- Progress Indicators -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"
                                Color="{StaticResource Primary}" />
-			<ProgressBar Progress="{Binding Progress}"
+
+            <ProgressBar Progress="{Binding Progress}"
                          IsVisible="{Binding IsBusy}"
                          ProgressColor="{StaticResource Primary}" />
-			<Label Text="{Binding StatusMessage}"
+
+            <Label Text="{Binding ProgressText}"
+                   IsVisible="{Binding IsBusy}"
+                   HorizontalOptions="Center"
+                   FontSize="12"
+                   TextColor="{DynamicResource PrimaryColor}" />
+
+            <Label Text="{Binding StatusMessage}"
                    IsVisible="{Binding IsBusy}"
                    HorizontalOptions="Center" />
 
-			<!-- Optional: Error message -->
-			<Label Text="{Binding ErrorMessage}"
+            <!-- Tap-to-Copy Error Label -->
+            <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
                    IsVisible="{Binding HasError}"
                    FontSize="14"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding CopyErrorCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
 
-			<!-- Log Output -->
-			<Frame CornerRadius="10" Padding="10" BackgroundColor="#f5f5f5">
-				<CollectionView ItemsSource="{Binding LogEntries}"
+            <!-- Log Output Viewer -->
+            <Border Stroke="#e0e0e0"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 10"
+                    Padding="10"
+                    Background="#f5f5f5">
+                <CollectionView ItemsSource="{Binding LogEntries}"
                                 HeightRequest="200">
-					<CollectionView.ItemTemplate>
-						<DataTemplate>
-							<Label Text="{Binding .}"
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Label Text="{Binding .}"
                                    FontFamily="Courier"
-                                   FontSize="14"/>
-						</DataTemplate>
-					</CollectionView.ItemTemplate>
-				</CollectionView>
-			</Frame>
-		</VerticalStackLayout>
-	</ScrollView>
+                                   FontSize="14" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
