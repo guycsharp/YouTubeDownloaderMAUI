@@ -2,23 +2,24 @@
 
 public partial class MainPage : ContentPage
 {
-	int count = 0;
+    private int count = 0; // ✅ Explicitly marked as private for good practice
 
-	public MainPage()
-	{
-		InitializeComponent();
-	}
+    public MainPage()
+    {
+        InitializeComponent(); // ✅ Ensures XAML elements are loaded
+    }
 
-	private void OnCounterClicked(object sender, EventArgs e)
-	{
-		count++;
+    private void OnCounterClicked(object sender, EventArgs e)
+    {
+        count++;
 
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
+        // ✅ Simplified ternary logic for singular/plural text
+        string timesText = count == 1 ? "time" : "times";
 
-		SemanticScreenReader.Announce(CounterBtn.Text);
-	}
+        // ✅ Assumes CounterBtn is defined in XAML with x:Name="CounterBtn"
+        CounterBtn.Text = $"Clicked {count} {timesText}";
+
+        // ✅ Makes app more accessible by announcing updated text
+        SemanticScreenReader.Announce(CounterBtn.Text);
+    }
 }
-
