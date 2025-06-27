@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.EventStream;
@@ -57,10 +58,14 @@ public partial class MainViewModel : ObservableObject
             ErrorMessage = string.Empty;
             IsBusy = true;
             StatusMessage = "Preparing...";
+            Progress = 0;
+
             await ExecutableService.EnsureExecutablesExist();
 
-            var binPath = Path.Combine(AppContext.BaseDirectory, "bin", "ffmpeg", "bin");
-            var ytDlpPath = Path.Combine(AppContext.BaseDirectory, "bin", "yt-dlp.exe");
+            // ✅ Use tools shipped in Tools/ folder
+            var toolsPath = Path.Combine(AppContext.BaseDirectory, "Tools");
+            var ytDlpPath = Path.Combine(toolsPath, "yt-dlp.exe");
+            var ffmpegBinPath = Path.Combine(toolsPath, "ffmpeg", "bin");
 
             var arguments = SelectedFormat == "MP4 (Video)"
                 ? "-f \"bestvideo+bestaudio\" --merge-output-format mp4 --embed-thumbnail --embed-metadata -o \"./%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s\""
@@ -74,7 +79,7 @@ public partial class MainViewModel : ObservableObject
                         .WithArguments(arguments)
                         .WithWorkingDirectory(AppContext.BaseDirectory)
                         .WithEnvironmentVariables(env =>
-                            env.Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{binPath}"));
+                            env.Set("PATH", $"{Environment.GetEnvironmentVariable("PATH")};{ffmpegBinPath}"));
 
             AddLog("Starting download...");
 
@@ -85,18 +90,23 @@ public partial class MainViewModel : ObservableObject
                     case StartedCommandEvent started:
                         AddLog($"Process started (ID: {started.ProcessId})");
                         break;
+
                     case StandardOutputCommandEvent stdOut:
                         AddLog(stdOut.Text);
+                        UpdateProgressBarFromOutput(stdOut.Text);
                         break;
+
                     case StandardErrorCommandEvent stdErr:
                         AddLog($"ERROR: {stdErr.Text}");
                         break;
+
                     case ExitedCommandEvent exited:
                         AddLog($"Process exited (Code: {exited.ExitCode})");
                         break;
                 }
             }
 
+            Progress = 1.0;
             AddLog("Download completed!");
             StatusMessage = "Completed successfully!";
         }
@@ -106,6 +116,7 @@ public partial class MainViewModel : ObservableObject
             HasError = true;
             AddLog($"Error: {ex.Message}");
             StatusMessage = "Download failed!";
+            Progress = 0;
         }
         finally
         {
@@ -113,14 +124,20 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private void UpdateProgressBarFromOutput(string line)
+    {
+        var match = Regex.Match(line, @"(?<percent>\d{1,3}(?:\.\d+)?)%");
+        if (match.Success && double.TryParse(match.Groups["percent"].Value, out double percent))
+        {
+            Progress = Math.Clamp(percent / 100.0, 0.0, 1.0);
+        }
+    }
+
     [RelayCommand]
     private async Task Paste()
     {
-        if (Clipboard.Default.HasText)
-        {
-            PlaylistUrl = await Clipboard.Default.GetTextAsync();
-            AddLog("Pasted URL from clipboard");
-        }
+        PlaylistUrl = await Clipboard.Default.GetTextAsync() ?? string.Empty;
+        AddLog("Pasted URL from clipboard");
     }
 
     private void AddLog(string message)
