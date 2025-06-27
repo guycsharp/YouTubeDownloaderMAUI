@@ -60,12 +60,16 @@
                    IsVisible="{Binding IsBusy}"
                    HorizontalOptions="Center" />
 
-            <!-- Error Message -->
+            <!-- Tappable Error Message -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
                    IsVisible="{Binding HasError}"
                    FontSize="14"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding CopyErrorCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
 
             <!-- Log Output -->
             <Frame CornerRadius="10" Padding="10" BackgroundColor="#f5f5f5">

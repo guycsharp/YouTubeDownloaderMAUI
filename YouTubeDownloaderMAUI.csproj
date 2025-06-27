@@ -57,7 +57,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Tools\" />
+		<Content Include="Tools\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>Tools\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+		</Content>
 	</ItemGroup>
+
 
 </Project>

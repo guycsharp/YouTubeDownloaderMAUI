@@ -62,7 +62,6 @@ public partial class MainViewModel : ObservableObject
 
             await ExecutableService.EnsureExecutablesExist();
 
-            // ✅ Use tools shipped in Tools/ folder
             var toolsPath = Path.Combine(AppContext.BaseDirectory, "Tools");
             var ytDlpPath = Path.Combine(toolsPath, "yt-dlp.exe");
             var ffmpegBinPath = Path.Combine(toolsPath, "ffmpeg", "bin");
@@ -138,6 +137,16 @@ public partial class MainViewModel : ObservableObject
     {
         PlaylistUrl = await Clipboard.Default.GetTextAsync() ?? string.Empty;
         AddLog("Pasted URL from clipboard");
+    }
+
+    [RelayCommand]
+    private async Task CopyError()
+    {
+        if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            await Clipboard.Default.SetTextAsync(ErrorMessage);
+            AddLog("Error message copied to clipboard.");
+        }
     }
 
     private void AddLog(string message)
