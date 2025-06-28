@@ -1,11 +1,10 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="YouTubeDownloaderMAUI.MainPage"
              xmlns:viewmodel="clr-namespace:YouTubeDownloaderMAUI.ViewModel"
-             Title="YouTube Downloader"
-             BackgroundColor="{DynamicResource PageBackgroundColor}">
+             Title="YouTube Downloader">
 
-    <!-- 🔗 Bind this page to the MainViewModel -->
     <ContentPage.BindingContext>
         <viewmodel:MainViewModel />
     </ContentPage.BindingContext>
@@ -13,109 +12,104 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
-            <!-- 🪧 App Title -->
-            <Label Text="YouTube Playlist Downloader"
+            <Label Text="🎬 YouTube Playlist Downloader"
                    FontSize="24"
                    HorizontalOptions="Center"
-                   TextColor="{DynamicResource PrimaryColor}" />
+                   TextColor="DarkBlue" />
 
-            <!-- 🔗 Playlist URL Entry + Paste Button -->
+            <!-- 🔗 Playlist URL -->
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <Entry Placeholder="Enter YouTube playlist URL"
+                <Entry Placeholder="Enter playlist URL"
                        Text="{Binding PlaylistUrl}"
-                       Grid.Column="0"
-                       ClearButtonVisibility="WhileEditing" />
+                       Grid.Column="0" />
                 <Button Text="Paste"
                         Command="{Binding PasteCommand}"
                         Grid.Column="1"
-                        Padding="10"
-                        VerticalOptions="Center"
-                        AutomationProperties.Name="Paste URL" />
+                        Padding="10" />
             </Grid>
 
-            <!-- 🎞 Format Picker -->
+            <!-- 🎞 Format picker -->
             <Picker Title="Select Format"
                     ItemsSource="{Binding Formats}"
-                    SelectedItem="{Binding SelectedFormat}"
-                    AutomationProperties.Name="Format Picker" />
+                    SelectedItem="{Binding SelectedFormat}" />
 
-            <!-- 📁 Destination Folder Selection -->
+            <!-- 📁 Folder picker -->
             <Label Text="Destination Folder"
-                   FontAttributes="Bold"
                    FontSize="14"
-                   TextColor="{DynamicResource PrimaryColor}" />
-
+                   FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <Entry Text="{Binding DestinationFolder}"
                        IsReadOnly="False"
-                       Grid.Column="0"
-                       AutomationProperties.Name="Destination Folder" />
+                       Grid.Column="0" />
                 <Button Text="Browse"
                         Command="{Binding BrowseCommand}"
                         Grid.Column="1"
-                        Padding="10"
-                        VerticalOptions="Center" />
+                        Padding="10" />
             </Grid>
 
-            <!-- 🆕 Overwrite Existing Checkbox -->
-            <CheckBox IsChecked="{Binding OverwriteExisting}" />
-            <Label Text="Overwrite existing files"
-                   VerticalOptions="Center"
-                   FontSize="14" />
+            <!-- ✅ Overwrite toggle -->
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <CheckBox IsChecked="{Binding OverwriteExisting}" />
+                <Label Text="Overwrite existing files"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
 
-            <!-- 🔽 Download Button -->
-            <Button Text="Download Playlist"
-                    Command="{Binding DownloadCommand}"
-                    IsEnabled="{Binding IsNotBusy}"
-                    BackgroundColor="{StaticResource Primary}"
-                    TextColor="White"
-                    CornerRadius="8"
-                    Padding="15"
-                    AutomationProperties.Name="Download Button" />
+            <!-- ⬇ Download + View History -->
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="Download"
+                        Command="{Binding DownloadCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                        BackgroundColor="#1976D2"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="12,6" />
 
-            <!-- 🔄 Busy Spinner + Progress -->
+                <Button Text="View History"
+                        Clicked="OnViewHistoryClicked"
+                        BackgroundColor="DarkGray"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="12,6" />
+            </HorizontalStackLayout>
+
+            <!-- 🔄 Progress -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               Color="{StaticResource Primary}" />
+                               IsVisible="{Binding IsBusy}" />
 
             <ProgressBar Progress="{Binding Progress}"
                          IsVisible="{Binding IsBusy}"
-                         ProgressColor="{StaticResource Primary}" />
+                         ProgressColor="DarkCyan" />
 
             <Label Text="{Binding ProgressText}"
                    IsVisible="{Binding IsBusy}"
-                   HorizontalOptions="Center"
-                   FontSize="12"
-                   TextColor="{DynamicResource PrimaryColor}" />
-
-            <Label Text="{Binding StatusMessage}"
-                   IsVisible="{Binding IsBusy}"
                    HorizontalOptions="Center" />
 
-            <!-- ⚠️ Tap-to-Copy Error Message -->
+            <Label Text="{Binding StatusMessage}"
+                   HorizontalOptions="Center" />
+
+            <!-- ❗ Error message -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
                    IsVisible="{Binding HasError}"
-                   FontSize="14"
-                   HorizontalOptions="Center">
+                   FontSize="13">
                 <Label.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding CopyErrorCommand}" />
                 </Label.GestureRecognizers>
             </Label>
 
-            <!-- 📝 Log Output -->
-            <Border Stroke="#e0e0e0"
+            <!-- 📜 Logs -->
+            <Border Stroke="#cccccc"
                     StrokeThickness="1"
-                    StrokeShape="RoundRectangle 10"
                     Padding="10"
+                    StrokeShape="RoundRectangle 10"
                     Background="Black">
                 <CollectionView ItemsSource="{Binding LogEntries}"
                                 HeightRequest="200">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Label Text="{Binding .}"
-                                   FontFamily="Courier"
-                                   FontSize="14" />
+                                   FontSize="13"
+                                   FontFamily="Courier New" />
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>

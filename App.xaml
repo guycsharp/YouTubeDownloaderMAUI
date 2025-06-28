@@ -1,14 +1,16 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:YouTubeDownloaderMAUI.Converters"
              xmlns:local="clr-namespace:YouTubeDownloaderMAUI"
              x:Class="YouTubeDownloaderMAUI.App">
 
 	<!-- 🎨 Shared Application Resources -->
 	<Application.Resources>
 		<ResourceDictionary>
-
-			<!-- 🧩 Merged dictionaries for modular resource organization -->
+            <!-- ✅ Register your value converter here -->
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <!-- 🧩 Merged dictionaries for modular resource organization -->
 			<ResourceDictionary.MergedDictionaries>
 
 				<!-- ✅ Colors for theming -->
@@ -17,7 +19,9 @@
 				<!-- ✅ Reusable styles like button styling, fonts, etc. -->
 				<ResourceDictionary Source="Resources/Styles/Styles.xaml" />
 
-			</ResourceDictionary.MergedDictionaries>
+               
+
+            </ResourceDictionary.MergedDictionaries>
 
 		</ResourceDictionary>
 	</Application.Resources>

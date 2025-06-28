@@ -63,5 +63,11 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <MauiXaml Update="PlaylistHistoryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 
 </Project>
