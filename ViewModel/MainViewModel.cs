@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Text.Json; // 🆕 For JSON serialization
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel; // 🆕 For ObservableCollection<T>
 using CliWrap;
 using CliWrap.EventStream;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,13 +15,17 @@ using YouTubeDownloaderMAUI.Services;
 
 namespace YouTubeDownloaderMAUI.ViewModel;
 
-// 🎯 This is your main view model — it handles all logic for the UI
+// 📌 Lightweight data class to log downloaded playlists
+public class PlaylistHistoryEntry
+{
+    public string Url { get; set; }
+    public string Format { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+
 public partial class MainViewModel : ObservableObject
 {
-    // =====================
-    // 🔗 UI-Bound Properties
-    // =====================
-
+    // [ Properties for UI binding — unchanged except as needed ]
     [ObservableProperty]
     private string _playlistUrl = string.Empty;
 
@@ -35,7 +41,6 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = "Ready";
 
-    // 🆕 ObservableCollection automatically notifies the UI when changed
     [ObservableProperty]
     private ObservableCollection<string> _logEntries = new();
 
@@ -57,9 +62,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _overwriteExisting = false;
 
-    // ================
-    // 📁 Folder Picker
-    // ================
+    public string ArchiveFilePath => Path.Combine(DestinationFolder, "downloaded.txt");
+
+    // 🆕 Path where playlist history will be saved
+    public string PlaylistHistoryPath => Path.Combine(DestinationFolder, "playlist_history.json");
 
     [RelayCommand]
     private async Task Browse()
@@ -85,10 +91,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // ======================
-    // 📋 Clipboard Integration
-    // ======================
-
     [RelayCommand]
     private async Task Paste()
     {
@@ -102,13 +104,9 @@ public partial class MainViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
             await Clipboard.Default.SetTextAsync(ErrorMessage);
-            AddLog("📎 Error copied to clipboard");
+            AddLog("📎 Error message copied to clipboard");
         }
     }
-
-    // =====================
-    // 📦 Start the download
-    // =====================
 
     [RelayCommand]
     private async Task Download()
@@ -152,14 +150,21 @@ public partial class MainViewModel : ObservableObject
 
             arguments += $" -o \"{outputTemplate}\"";
 
+            arguments += $" --download-archive \"{ArchiveFilePath}\"";
+            AddLog($"📒 Resume support: using archive {ArchiveFilePath}");
+
             if (!OverwriteExisting)
             {
                 arguments += " --no-overwrites";
+                AddLog("⚠️ Existing files will be skipped.");
             }
 
             arguments += $" \"{PlaylistUrl}\"";
 
-            AddLog($"▶ Running yt-dlp with args: {arguments}");
+            // 🆕 Step: Record playlist history before launch
+            await RecordPlaylistHistory();
+
+            AddLog($"▶ yt-dlp launching with: {arguments}");
 
             var cmd = Cli.Wrap(ytDlpPath)
                          .WithArguments(arguments)
@@ -195,7 +200,7 @@ public partial class MainViewModel : ObservableObject
             Progress = 1.0;
             ProgressText = "100%";
             StatusMessage = "Download complete!";
-            AddLog("🎉 All files downloaded.");
+            AddLog("🎉 Download finished.");
         }
         catch (Exception ex)
         {
@@ -212,10 +217,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // ===========================
-    // 📊 yt-dlp Output Progress %
-    // ===========================
-
     private void UpdateProgressBarFromOutput(string line)
     {
         var match = Regex.Match(line, @"(?<percent>\d{1,3}(?:\.\d+)?)%");
@@ -227,15 +228,46 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // ========================
-    // 🧾 Timestamped Log Entry
-    // ========================
-
     private void AddLog(string message)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
             LogEntries.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
         });
+    }
+
+    // 🆕 Saves playlist metadata to history file
+    private async Task RecordPlaylistHistory()
+    {
+        try
+        {
+            // Load existing list if file exists
+            List<PlaylistHistoryEntry> history = new();
+
+            if (File.Exists(PlaylistHistoryPath))
+            {
+                string json = await File.ReadAllTextAsync(PlaylistHistoryPath);
+                history = JsonSerializer.Deserialize<List<PlaylistHistoryEntry>>(json) ?? new();
+            }
+
+            // Append new entry
+            var entry = new PlaylistHistoryEntry
+            {
+                Url = PlaylistUrl,
+                Format = SelectedFormat,
+                Timestamp = DateTime.UtcNow
+            };
+
+            history.Add(entry);
+
+            // Save back to disk
+            string updatedJson = JsonSerializer.Serialize(history, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(PlaylistHistoryPath, updatedJson);
+            AddLog($"🧾 Logged playlist to history: {PlaylistHistoryPath}");
+        }
+        catch (Exception ex)
+        {
+            AddLog($"⚠️ Failed to record history: {ex.Message}");
+        }
     }
 }
