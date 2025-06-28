@@ -108,7 +108,7 @@
                     StrokeThickness="1"
                     StrokeShape="RoundRectangle 10"
                     Padding="10"
-                    Background="#f5f5f5">
+                    Background="Black">
                 <CollectionView ItemsSource="{Binding LogEntries}"
                                 HeightRequest="200">
                     <CollectionView.ItemTemplate>
