@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="YouTubeDownloaderMAUI.PlaylistHistoryPage"
+             Title="Playlist History">
+
+    <VerticalStackLayout Padding="20" Spacing="10">
+
+        <!-- 🧠 Status indicator (total loaded, errors, etc.) -->
+        <Label x:Name="HistoryStatus"
+               Text="Loading history..."
+               FontAttributes="Bold"
+               FontSize="14"
+               TextColor="DarkSlateGray" />
+
+        <!-- 📄 History list of playlist downloads -->
+        <CollectionView x:Name="HistoryList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BorderColor="#ddd" Margin="0,5" Padding="10" BackgroundColor="#f8f8f8">
+                        <VerticalStackLayout Spacing="6">
+
+                            <!-- 🎯 Playlist URL -->
+                            <Label Text="{Binding Url}"
+                                   FontSize="13"
+                                   TextColor="Black"
+                                   LineBreakMode="TailTruncation" />
+
+                            <!-- 📁 Format & 📅 Timestamp -->
+                            <HorizontalStackLayout>
+                                <Label Text="{Binding Format}"
+                                       FontSize="11"
+                                       TextColor="DarkGreen" />
+
+                                <Label Text="{Binding Timestamp, StringFormat='{0:yyyy-MM-dd HH:mm}'}"
+                                       FontSize="11"
+                                       TextColor="Gray"
+                                       Margin="15,0,0,0"/>
+                            </HorizontalStackLayout>
+
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </VerticalStackLayout>
+</ContentPage>

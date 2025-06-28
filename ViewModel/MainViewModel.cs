@@ -12,6 +12,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using YouTubeDownloaderMAUI.Services;
+using YouTubeDownloaderMAUI.Models;
+
 
 namespace YouTubeDownloaderMAUI.ViewModel;
 
